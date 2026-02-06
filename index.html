@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>視覺恢復訓練效果</title>
+    <style>
+        :root {
+            --main-color: #e600a0;
+            --bg-speed: 0.3s;
+            --heart-duration: 0.4s;
+            --heart-state: running;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            font-family: "Microsoft JhengHei", sans-serif;
+        }
+
+        @property --phase {
+            syntax: '<length>';
+            inherits: false;
+            initial-value: 0px;
+        }
+
+        .hypnotic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: move-out var(--bg-speed) linear infinite;
+            background: repeating-radial-gradient(
+                circle at center,
+                var(--main-color) calc(var(--phase) + 0px),
+                var(--main-color) calc(var(--phase) + 20px),
+                #fff calc(var(--phase) + 20px),
+                #fff calc(var(--phase) + 40px)
+            );
+        }
+
+        @keyframes move-out {
+            from { --phase: 0px; }
+            to { --phase: 40px; }
+        }
+
+        .heart-wrapper {
+            position: relative;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(0,0,0, 0.2));
+            animation: heart-beat var(--heart-duration) ease-in-out infinite alternate;
+            animation-play-state: var(--heart-state);
+            transition: transform 0.3s;
+        }
+
+        @keyframes heart-beat {
+            from { transform: scale(1); }
+            to { transform: scale(1.15); }
+        }
+
+        svg {
+            width: 150px;
+            fill: #fff;
+            stroke: var(--main-color);
+            stroke-width: 15;
+            transition: stroke 0.2s;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .settings-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .settings-panel {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 220px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .settings-panel.show {
+            display: flex;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .val-display {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hypnotic-bg"></div>
+
+    <div class="heart-wrapper" id="heart">
+        <svg viewBox="0 0 512 512">
+            <path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"/>
+        </svg>
+    </div>
+
+    <div class="settings-btn" id="toggleBtn">⚙️</div>
+
+    <div class="settings-panel" id="panel">
+        <div class="control-group">
+            <div class="row">
+                <label>背景速度</label>
+                <span class="val-display" id="speedVal">0.3s</span>
+            </div>
+            <input type="range" id="speedInput" min="0.1" max="5" step="0.1" value="0.3">
+            <small style="color:#999; font-size:10px;">(數值越大越慢)</small>
+        </div>
+
+        <div class="control-group">
+            <div class="row">
+                <label>心跳節奏</label>
+                <span class="val-display" id="heartVal">0.4s</span>
+            </div>
+            <input type="range" id="heartInput" min="0" max="3" step="0.1" value="0.4">
+            <small style="color:#999; font-size:10px;">(0為停止，數值越大越慢)</small>
+        </div>
+
+        <div class="control-group">
+            <label>顏色設定</label>
+            <input type="color" id="colorInput" value="#e600a0" style="width:100%; height:30px;">
+        </div>
+    </div>
+
+    <script>
+        const toggleBtn = document.getElementById('toggleBtn');
+        const panel = document.getElementById('panel');
+        const root = document.documentElement;
+        
+        const speedInput = document.getElementById('speedInput');
+        const speedVal = document.getElementById('speedVal');
+        
+        const heartInput = document.getElementById('heartInput');
+        const heartVal = document.getElementById('heartVal');
+
+        const colorInput = document.getElementById('colorInput');
+
+        toggleBtn.addEventListener('click', () => {
+            panel.classList.toggle('show');
+        });
+
+        speedInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            speedVal.textContent = val + "s";
+            root.style.setProperty('--bg-speed', val + "s");
+        });
+
+        heartInput.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            
+            if (val === 0) {
+                heartVal.textContent = "停止";
+                root.style.setProperty('--heart-state', 'paused');
+            } else {
+                heartVal.textContent = val + "s";
+                root.style.setProperty('--heart-duration', val + "s");
+                root.style.setProperty('--heart-state', 'running');
+            }
+        });
+
+        colorInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            root.style.setProperty('--main-color', val);
+        });
+    </script>
+
+</body>
+</html>
