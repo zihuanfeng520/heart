@@ -142,6 +142,19 @@
             color: #666;
             font-family: monospace;
         }
+
+        .fullscreen-btn {
+            padding: 8px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -179,6 +192,10 @@
             <label>顏色設定</label>
             <input type="color" id="colorInput" value="#e600a0" style="width:100%; height:30px;">
         </div>
+
+        <div class="control-group">
+            <button id="fullscreenBtn" class="fullscreen-btn">切換全螢幕</button>
+        </div>
     </div>
 
     <script>
@@ -193,6 +210,7 @@
         const heartVal = document.getElementById('heartVal');
 
         const colorInput = document.getElementById('colorInput');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
 
         toggleBtn.addEventListener('click', () => {
             panel.classList.toggle('show');
@@ -220,6 +238,18 @@
         colorInput.addEventListener('input', (e) => {
             const val = e.target.value;
             root.style.setProperty('--main-color', val);
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(err);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
         });
     </script>
 
